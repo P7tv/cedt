@@ -1,23 +1,14 @@
 "use client"
 
-import { useEffect } from "react"
 import { Navigation } from "@/components/navigation"
 import { useAuth } from "@/hooks/use-auth"
-import { useRouter } from "next/navigation"
 import Image from "next/image"
 import React from 'react';
 import { motion } from "framer-motion"
 
 export default function Camp() {
-  const router = useRouter()
   const { user, loading } = useAuth()
   
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login")
-    }
-  }, [user, loading, router])
 
   // Mock camp data for universities
   const universities = [

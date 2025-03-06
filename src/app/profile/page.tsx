@@ -437,6 +437,7 @@ export default function Profile() {
               type="text"
               value={universityInput}
               onChange={handleUniversityInputChange}
+              onKeyDown={handleUniversityKeyDown}
               placeholder="พิมพ์ชื่อมหาวิทยาลัย"
               className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
               disabled={isLoading}
@@ -491,6 +492,7 @@ export default function Profile() {
               type="text"
               value={facultyInput}
               onChange={handleFacultyInputChange}
+              onKeyDown={handleFacultyKeyDown}
               placeholder="พิมพ์ชื่อคณะ"
               className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
               disabled={isLoading || universityTags.length === 0}
