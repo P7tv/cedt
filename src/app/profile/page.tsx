@@ -1,10 +1,25 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Navigation } from "@/components/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { motion, AnimatePresence } from "framer-motion"
 import { Loader2, Save, Check, School, User, GraduationCap, BookOpen, UserCircle } from "lucide-react"
+import { getUniversityOptions, getFacultyOptions } from "@/utils/tcas";
+
+interface FacultyOption {
+  id: string;
+  name_th: string;
+  name_en: string;
+}
+
+interface UniversityOption {
+  id: string;
+  name_th: string;
+  name_en: string;
+  campus_th: string;
+  campus_en: string;
+}
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState("info")
@@ -30,6 +45,13 @@ export default function Profile() {
   const [isSaveSuccess, setSaveSuccess] = useState(false)
 
   const { updateProfile } = useAuth()
+
+  const [universityOptions, setUniversityOptions] = useState<UniversityOption[]>([]);
+  const [showUniversityOptions, setShowUniversityOptions] = useState(false);
+  const [facultyOptions, setFacultyOptions] = useState<FacultyOption[]>([]);
+  const [showFacultyOptions, setShowFacultyOptions] = useState(false);
+  const universityInputRef = useRef<HTMLDivElement>(null);
+  const facultyInputRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Fetch user profile data
@@ -67,6 +89,20 @@ export default function Profile() {
 
     fetchProfile()
   }, [])
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (universityInputRef.current && !universityInputRef.current.contains(event.target as Node)) {
+        setShowUniversityOptions(false);
+      }
+      if (facultyInputRef.current && !facultyInputRef.current.contains(event.target as Node)) {
+        setShowFacultyOptions(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -149,6 +185,41 @@ export default function Profile() {
       setIsLoading(false)
     }
   }
+
+  const handleUniversityInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUniversityInput(value);
+    const options = getUniversityOptions(value);
+    setUniversityOptions(options);
+    setShowUniversityOptions(true);
+  };
+
+  const handleSelectUniversity = (option: UniversityOption) => {
+    const tag = `${option.name_th} (${option.campus_th})`;
+    if (!universityTags.includes(tag)) {
+      setUniversityTags(prev => [...prev, tag]);
+      // Update faculty options when university is selected
+      const faculties = getFacultyOptions(option.name_th, option.campus_th);
+      setFacultyOptions(faculties);
+    }
+    setUniversityInput('');
+    setShowUniversityOptions(false);
+  };
+
+  const handleFacultyInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFacultyInput(value);
+    setShowFacultyOptions(true);
+  };
+
+  const handleSelectFaculty = (option: FacultyOption) => {
+    const tag = option.name_th;
+    if (!facultyTags.includes(tag)) {
+      setFacultyTags(prev => [...prev, tag]);
+    }
+    setFacultyInput('');
+    setShowFacultyOptions(false);
+  };
 
   // Animation variants
   const containerVariants = {
@@ -358,19 +429,32 @@ export default function Profile() {
               </div>
             ))}
           </div>
-          <div className="relative">
+          <div className="relative" ref={universityInputRef}>
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <School size={16} className="text-gray-400" />
             </div>
             <input
               type="text"
               value={universityInput}
-              onChange={(e) => setUniversityInput(e.target.value)}
-              onKeyDown={handleUniversityKeyDown}
-              placeholder="พิมพ์ชื่อมหาวิทยาลัยและกด Enter"
+              onChange={handleUniversityInputChange}
+              placeholder="พิมพ์ชื่อมหาวิทยาลัย"
               className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
               disabled={isLoading}
             />
+            {showUniversityOptions && universityOptions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                {universityOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => handleSelectUniversity(option)}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-100 flex flex-col"
+                  >
+                    <span className="font-medium">{option.name_th}</span>
+                    <span className="text-sm text-gray-500">{option.campus_th}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
@@ -396,23 +480,40 @@ export default function Profile() {
               </div>
             ))}
           </div>
-          <div className="relative">
+          <div className="relative" ref={facultyInputRef}>
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M12 14l9-5-9-5-9 5 9 5z" />
-                <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                <path d="M12 14l9-5-9-5-9 5-9-5z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
               </svg>
             </div>
             <input
               type="text"
               value={facultyInput}
-              onChange={(e) => setFacultyInput(e.target.value)}
-              onKeyDown={handleFacultyKeyDown}
-              placeholder="พิมพ์ชื่อคณะและกด Enter"
+              onChange={handleFacultyInputChange}
+              placeholder="พิมพ์ชื่อคณะ"
               className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-              disabled={isLoading}
+              disabled={isLoading || universityTags.length === 0}
             />
+            {showFacultyOptions && facultyOptions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                {facultyOptions
+                  .filter(option => 
+                    option.name_th.toLowerCase().includes(facultyInput.toLowerCase()) ||
+                    option.name_en.toLowerCase().includes(facultyInput.toLowerCase())
+                  )
+                  .map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => handleSelectFaculty(option)}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-100 flex flex-col"
+                    >
+                      <span className="font-medium">{option.name_th}</span>
+                      <span className="text-sm text-gray-500">{option.name_en}</span>
+                    </button>
+                  ))}
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
