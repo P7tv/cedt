@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from "react"
 import { Navigation } from "@/components/navigation"
 import { useAuth } from "@/hooks/use-auth"
+import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
-import { Loader2, Save, Check, School, User, GraduationCap, BookOpen, UserCircle } from "lucide-react"
+import { Camera, Loader2, Save, Check, School, User, GraduationCap, BookOpen } from "lucide-react"
 import { getUniversityOptions, getFacultyOptions } from "@/utils/tcas";
 
 interface FacultyOption {
@@ -43,15 +44,16 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState({ text: "", type: "" })
   const [isSaveSuccess, setSaveSuccess] = useState(false)
-
   const { updateProfile } = useAuth()
-
   const [universityOptions, setUniversityOptions] = useState<UniversityOption[]>([]);
   const [showUniversityOptions, setShowUniversityOptions] = useState(false);
   const [facultyOptions, setFacultyOptions] = useState<FacultyOption[]>([]);
   const [showFacultyOptions, setShowFacultyOptions] = useState(false);
   const universityInputRef = useRef<HTMLDivElement>(null);
   const facultyInputRef = useRef<HTMLDivElement>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     // Fetch user profile data
@@ -157,20 +159,49 @@ export default function Profile() {
     setSaveSuccess(false)
     setMessage({ text: "", type: "" })
 
-    // Combine tags into comma-separated strings
-    const updatedUserData = {
-      ...userData,
-      university: universityTags.join(", "),
-      faculty: facultyTags.join(", "),
-    }
-
     try {
+      // If there's a selected image, upload it first
+      let profileImageUrl = userData.profileImage
+
+      if (selectedImage) {
+        // Create a FormData object to send the file
+        const formData = new FormData()
+        formData.append('file', selectedImage)
+
+        // Send the file to your API endpoint
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: formData
+        })
+
+        if (!uploadResponse.ok) {
+          throw new Error("Failed to upload image")
+        }
+
+        const uploadResult = await uploadResponse.json()
+
+        if (uploadResult.success) {
+          profileImageUrl = uploadResult.url // This will be a path like /uploads/123_timestamp.jpg
+        }
+      }
+
+      // Combine tags into comma-separated strings
+      const updatedUserData = {
+        ...userData,
+        profileImage: profileImageUrl,
+        university: universityTags.join(", "),
+        faculty: facultyTags.join(", "),
+      }
+
       const result = await updateProfile(updatedUserData)
 
       if (result.success) {
         setMessage({ text: "บันทึกข้อมูลสำเร็จ", type: "success" })
         setSaveSuccess(true)
-        
+
+        // Reset states
+        setSelectedImage(null)
+
         // Reset success state after 3 seconds
         setTimeout(() => {
           setSaveSuccess(false)
@@ -185,6 +216,7 @@ export default function Profile() {
       setIsLoading(false)
     }
   }
+
 
   const handleUniversityInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -221,21 +253,41 @@ export default function Profile() {
     setShowFacultyOptions(false);
   };
 
+  // Add this function to handle image selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      setSelectedImage(file)
+
+      // Create a preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Function to trigger file input click
+  const triggerFileInput = () => {
+    fileInputRef.current?.click()
+  }
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { 
-        staggerChildren: 0.1 
-      } 
+      transition: {
+        staggerChildren: 0.1
+      }
     }
   }
-  
+
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
+    visible: {
+      y: 0,
       opacity: 1,
       transition: { type: "spring", stiffness: 100 }
     }
@@ -243,8 +295,8 @@ export default function Profile() {
 
   const tabVariants = {
     inactive: { boxShadow: "none", scale: 1 },
-    active: { 
-      boxShadow: "0 4px 14px 0 rgba(0, 0, 0, 0.1)", 
+    active: {
+      boxShadow: "0 4px 14px 0 rgba(0, 0, 0, 0.1)",
       scale: 1.02,
       transition: { type: "spring", stiffness: 300, damping: 20 }
     }
@@ -252,7 +304,7 @@ export default function Profile() {
 
   // Tab content components
   const renderPersonalInfoTab = () => (
-    <motion.div 
+    <motion.div
       className="grid grid-cols-1 md:grid-cols-2 gap-6"
       variants={containerVariants}
       initial="hidden"
@@ -276,7 +328,7 @@ export default function Profile() {
           />
         </div>
       </motion.div>
-      
+
       <motion.div className="space-y-2" variants={itemVariants}>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
           อีเมล
@@ -301,9 +353,9 @@ export default function Profile() {
       </motion.div>
     </motion.div>
   )
-  
+
   const renderEducationTab = () => (
-    <motion.div 
+    <motion.div
       className="space-y-6"
       variants={containerVariants}
       initial="hidden"
@@ -338,7 +390,7 @@ export default function Profile() {
             </div>
           </div>
         </motion.div>
-        
+
         <motion.div className="space-y-2" variants={itemVariants}>
           <label htmlFor="gpa" className="block text-sm font-medium text-gray-700">
             เกรดเฉลี่ย (GPAX)
@@ -372,13 +424,12 @@ export default function Profile() {
             { value: "arts-math", label: "ศิลป์-คำนวณ" },
             { value: "arts-lang", label: "ศิลป์-ภาษา" }
           ].map((option) => (
-            <label 
+            <label
               key={option.value}
-              className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
-                userData.study_program === option.value 
-                  ? "border-primary bg-primary/5" 
-                  : "border-gray-300 hover:bg-gray-50"
-              }`}
+              className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${userData.study_program === option.value
+                ? "border-primary bg-primary/5"
+                : "border-gray-300 hover:bg-gray-50"
+                }`}
             >
               <input
                 type="radio"
@@ -386,11 +437,10 @@ export default function Profile() {
                 value={option.value}
                 checked={userData.study_program === option.value}
                 onChange={handleRadioChange}
-                className={`mr-2 h-4 w-4 ${
-                  userData.study_program === option.value 
-                    ? "text-primary focus:ring-primary" 
-                    : "text-gray-300"
-                }`}
+                className={`mr-2 h-4 w-4 ${userData.study_program === option.value
+                  ? "text-primary focus:ring-primary"
+                  : "text-gray-300"
+                  }`}
                 disabled={isLoading}
               />
               <span className={userData.study_program === option.value ? "font-medium" : ""}>{option.label}</span>
@@ -400,9 +450,9 @@ export default function Profile() {
       </motion.div>
     </motion.div>
   )
-  
+
   const renderInterestsTab = () => (
-    <motion.div 
+    <motion.div
       className="space-y-6"
       variants={containerVariants}
       initial="hidden"
@@ -500,7 +550,7 @@ export default function Profile() {
             {showFacultyOptions && facultyOptions.length > 0 && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
                 {facultyOptions
-                  .filter(option => 
+                  .filter(option =>
                     option.name_th.toLowerCase().includes(facultyInput.toLowerCase()) ||
                     option.name_en.toLowerCase().includes(facultyInput.toLowerCase())
                   )
@@ -529,13 +579,12 @@ export default function Profile() {
             { value: "3", label: "รอบที่ 3 Admission" },
             { value: "4", label: "รอบที่ 4 Direct Admission" }
           ].map((option) => (
-            <label 
+            <label
               key={option.value}
-              className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
-                userData.admission_rounds.includes(option.value) 
-                  ? "border-primary bg-primary/5" 
-                  : "border-gray-300 hover:bg-gray-50"
-              }`}
+              className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${userData.admission_rounds.includes(option.value)
+                ? "border-primary bg-primary/5"
+                : "border-gray-300 hover:bg-gray-50"
+                }`}
             >
               <input
                 type="checkbox"
@@ -543,11 +592,10 @@ export default function Profile() {
                 value={option.value}
                 checked={userData.admission_rounds.includes(option.value)}
                 onChange={handleCheckboxChange}
-                className={`mr-2 h-4 w-4 rounded ${
-                  userData.admission_rounds.includes(option.value) 
-                    ? "text-primary focus:ring-primary" 
-                    : "text-gray-300"
-                }`}
+                className={`mr-2 h-4 w-4 rounded ${userData.admission_rounds.includes(option.value)
+                  ? "text-primary focus:ring-primary"
+                  : "text-gray-300"
+                  }`}
                 disabled={isLoading}
               />
               <span className={userData.admission_rounds.includes(option.value) ? "font-medium" : ""}>{option.label}</span>
@@ -563,7 +611,7 @@ export default function Profile() {
       <Navigation />
 
       <div className="container mx-auto px-4 py-6 sm:py-8 md:py-10">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -574,15 +622,49 @@ export default function Profile() {
             <div className="h-32 sm:h-40 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600"></div>
             <div className="px-6 sm:px-8 pb-6">
               <div className="flex items-center space-x-4">
-              <div className="relative -mt-12 w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-white flex items-center justify-center">
-  <UserCircle size={80} className="text-primary/60" />
-</div>
+                <div className="relative -mt-12 w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-white flex items-center justify-center group">
+                  {previewUrl ? (
+                    // Preview from local file selection
+                    <Image src={previewUrl} alt="Profile" fill className="object-cover" />
+                  ) : (
+                    // Use userData.profileImage with fallback
+                    <Image
+                      src={userData.profileImage || "/avatar.png"}
+                      alt="Profile"
+                      fill
+                      className="profile-img object-cover"
+                      onError={() => {
+                        // This will update the src to fallback if the original fails
+                        const imgElement = document.querySelector('.profile-img') as HTMLImageElement;
+                        if (imgElement && imgElement.src !== '/avatar.png') {
+                          imgElement.src = '/avatar.png';
+                        }
+                      }}
+                    />
+                  )}
+
+                  {/* Overlay that appears on hover */}
+                  <div
+                    onClick={triggerFileInput}
+                    className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    <Camera size={20} className="text-white" />
+                  </div>
+
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleImageChange}
+                    accept="image/*"
+                  />
+                </div>
                 <div className="py-4">
                   <h2 className="text-xl sm:text-2xl font-bold">{userData.username}</h2>
                   <p className="text-gray-500 text-sm">
-                    {userData.study_program === "science" ? "วิทย์-คณิต" : 
-                     userData.study_program === "arts-math" ? "ศิลป์-คำนวณ" : 
-                     userData.study_program === "arts-lang" ? "ศิลป์-ภาษา" : "ยังไม่ได้เลือกสายการเรียน"}
+                    {userData.study_program === "science" ? "วิทย์-คณิต" :
+                      userData.study_program === "arts-math" ? "ศิลป์-คำนวณ" :
+                        userData.study_program === "arts-lang" ? "ศิลป์-ภาษา" : "ยังไม่ได้เลือกสายการเรียน"}
                   </p>
                 </div>
               </div>
@@ -598,9 +680,8 @@ export default function Profile() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className={`p-4 ${
-                    message.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                  }`}
+                  className={`p-4 ${message.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                    }`}
                 >
                   {message.text}
                 </motion.div>
@@ -612,11 +693,10 @@ export default function Profile() {
               <div className="flex overflow-x-auto hide-scrollbar px-4 py-3 space-x-2 sm:space-x-4">
                 <motion.button
                   onClick={() => setActiveTab("info")}
-                  className={`flex items-center space-x-2 py-2 px-4 rounded-lg text-sm font-medium ${
-                    activeTab === "info"
-                      ? "bg-primary/10 text-primary"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                  }`}
+                  className={`flex items-center space-x-2 py-2 px-4 rounded-lg text-sm font-medium ${activeTab === "info"
+                    ? "bg-primary/10 text-primary"
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                    }`}
                   variants={tabVariants}
                   animate={activeTab === "info" ? "active" : "inactive"}
                   whileHover={{ scale: 1.01 }}
@@ -627,11 +707,10 @@ export default function Profile() {
                 </motion.button>
                 <motion.button
                   onClick={() => setActiveTab("education")}
-                  className={`flex items-center space-x-2 py-2 px-4 rounded-lg text-sm font-medium ${
-                    activeTab === "education"
-                      ? "bg-primary/10 text-primary"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                  }`}
+                  className={`flex items-center space-x-2 py-2 px-4 rounded-lg text-sm font-medium ${activeTab === "education"
+                    ? "bg-primary/10 text-primary"
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                    }`}
                   variants={tabVariants}
                   animate={activeTab === "education" ? "active" : "inactive"}
                   whileHover={{ scale: 1.01 }}
@@ -642,11 +721,10 @@ export default function Profile() {
                 </motion.button>
                 <motion.button
                   onClick={() => setActiveTab("interests")}
-                  className={`flex items-center space-x-2 py-2 px-4 rounded-lg text-sm font-medium ${
-                    activeTab === "interests"
-                      ? "bg-primary/10 text-primary"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                  }`}
+                  className={`flex items-center space-x-2 py-2 px-4 rounded-lg text-sm font-medium ${activeTab === "interests"
+                    ? "bg-primary/10 text-primary"
+                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                    }`}
                   variants={tabVariants}
                   animate={activeTab === "interests" ? "active" : "inactive"}
                   whileHover={{ scale: 1.01 }}
@@ -667,7 +745,7 @@ export default function Profile() {
               </AnimatePresence>
 
               {/* Save Button */}
-              <motion.div 
+              <motion.div
                 className="mt-8 flex justify-end"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -676,11 +754,10 @@ export default function Profile() {
                 <motion.button
                   type="button"
                   onClick={saveProfile}
-                  className={`flex items-center space-x-2 px-6 py-2.5 rounded-lg text-white font-medium transition-all ${
-                    isSaveSuccess 
-                      ? "bg-green-600 hover:bg-green-700" 
-                      : "bg-primary hover:bg-primary/90"
-                  }`}
+                  className={`flex items-center space-x-2 px-6 py-2.5 rounded-lg text-white font-medium transition-all ${isSaveSuccess
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-primary hover:bg-primary/90"
+                    }`}
                   disabled={isLoading}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

@@ -1,15 +1,12 @@
 "use client"
 
-import { useState, useRef, useEffect, ReactNode } from "react"
+import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useAuth } from "@/hooks/use-auth"
 import { motion, AnimatePresence } from "framer-motion"
 
-interface ProfileDropdownProps {
-  icon: ReactNode;
-}
-
-export function ProfileDropdown({ icon }: ProfileDropdownProps) {
+export function ProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { user, logout } = useAuth()
@@ -36,10 +33,24 @@ export function ProfileDropdown({ icon }: ProfileDropdownProps) {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 focus:outline-none focus:border-primary"
+        className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 focus:outline-none focus:border-primary flex items-center justify-center bg-white"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {icon}
+        <div className="relative w-full h-full">
+          <Image 
+            src={user.profileImage || "/avatar.png"} 
+            alt="Profile" 
+            fill 
+            className="profile-img-dropdown object-cover"
+            onError={() => {
+              // This will update the src to fallback if the original fails
+              const imgElement = document.querySelector('.profile-img-dropdown') as HTMLImageElement;
+              if (imgElement && imgElement.src !== '/avatar.png') {
+                imgElement.src = '/avatar.png';
+              }
+            }}
+          />
+        </div>
       </button>
 
       <AnimatePresence>
@@ -70,4 +81,3 @@ export function ProfileDropdown({ icon }: ProfileDropdownProps) {
     </div>
   )
 }
-

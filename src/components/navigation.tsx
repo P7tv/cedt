@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ProfileDropdown } from './profile-dropdown'
 import { useAuth } from '@/hooks/use-auth'
-import { Menu, X, Search, User  } from 'lucide-react'
+import { Menu, X, Search } from 'lucide-react'
 
 export function Navigation() {
   const pathname = usePathname()
@@ -86,7 +86,8 @@ export function Navigation() {
           
           {!loading && (
             user ? (
-              <ProfileDropdown icon={<User size={37} className="text-primary/60" />} />
+              // We don't need to pass the icon anymore, it will be handled inside the component
+              <ProfileDropdown />
             ) : (
               <div className="hidden md:flex space-x-2">
                 <Link 
