@@ -281,7 +281,7 @@ ${intensityPrompts[effectiveIntensity]}
           {/* Mobile Header with Menu Toggle */}
           <div className="flex justify-between items-center mb-4 md:hidden">
             <h2 className="font-bold text-lg">
-              {activeTab === "human" ? "สัมภาษณ์กับรุ่นพี่" : "สัมภาษณ์กับ AI"}
+              {activeTab === "human" ? "โพสต์กระทู้" : "สัมภาษณ์กับ AI"}
             </h2>
             <button 
               onClick={toggleMobileMenu}
@@ -314,7 +314,7 @@ ${intensityPrompts[effectiveIntensity]}
                     }`}
                   >
                     <BookUser size={18} />
-                    <span>สัมภาษณ์กับรุ่นพี่</span>
+                    <span>โพสต์กระทู้</span>
                   </button>
                   <button
                     onClick={() => {
@@ -351,7 +351,7 @@ ${intensityPrompts[effectiveIntensity]}
               }`}
             >
               <BookUser size={18} />
-              <span>สัมภาษณ์กับรุ่นพี่</span>
+              <span>โพสต์กระทู้</span>
             </button>
             <button
               onClick={() => setActiveTab("ai")}
