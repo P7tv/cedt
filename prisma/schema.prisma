@@ -26,5 +26,18 @@ model User {
   
   // Store admission rounds as a JSON array
   admission_rounds Json?
+
+  posts         Post[]
 }
 
+// Add this to your existing schema.prisma file
+model Post {
+  id            String    @id @default(cuid())
+  content       String
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  likes         Int       @default(0)
+  comments      Int       @default(0)
+}
