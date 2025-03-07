@@ -1,13 +1,29 @@
 "use client"
 
 import type React from "react"
-
+import { useRef } from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Navigation } from "@/components/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { motion, AnimatePresence } from "framer-motion"
+import { getUniversityOptions, getFacultyOptions } from "@/utils/tcas"
+import { School } from "lucide-react"
+
+interface UniversityOption {
+  id: string;
+  name_th: string;
+  name_en: string;
+  campus_th: string;
+  campus_en: string;
+}
+
+interface FacultyOption {
+  id: string;
+  name_th: string;
+  name_en: string;
+}
 
 export default function Signup() {
   const [step, setStep] = useState(1)
@@ -28,6 +44,17 @@ export default function Signup() {
     gpa: "",
     admission_rounds: [] as string[],
   })
+
+  const [universityTags, setUniversityTags] = useState<string[]>([])
+  const [facultyTags, setFacultyTags] = useState<string[]>([])
+  const [universityInput, setUniversityInput] = useState("")
+  const [facultyInput, setFacultyInput] = useState("")
+  const [universityOptions, setUniversityOptions] = useState<UniversityOption[]>([])
+  const [showUniversityOptions, setShowUniversityOptions] = useState(false)
+  const [facultyOptions, setFacultyOptions] = useState<FacultyOption[]>([])
+  const [showFacultyOptions, setShowFacultyOptions] = useState(false)
+  const universityInputRef = useRef<HTMLDivElement>(null)
+  const facultyInputRef = useRef<HTMLDivElement>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -50,19 +77,62 @@ export default function Signup() {
     }
   }
 
-  const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleUniversityInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUniversityInput(value);
+    const options = getUniversityOptions(value);
+    setUniversityOptions(options);
+    setShowUniversityOptions(true);
+  };
+
+  const handleSelectUniversity = (option: UniversityOption) => {
+    const tag = `${option.name_th} (${option.campus_th})`;
+    if (!universityTags.includes(tag)) {
+      setUniversityTags(prev => [...prev, tag]);
+      setFormData(prev => ({ ...prev, university: [...universityTags, tag].join(", ") }));
+      // Update faculty options when university is selected
+      const faculties = getFacultyOptions(option.name_th, option.campus_th);
+      setFacultyOptions(faculties);
+    }
+    setUniversityInput('');
+    setShowUniversityOptions(false);
+  };
+
+  const handleFacultyInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFacultyInput(value);
+    setShowFacultyOptions(true);
+  };
+
+  const handleSelectFaculty = (option: FacultyOption) => {
+    const tag = option.name_th;
+    if (!facultyTags.includes(tag)) {
+      setFacultyTags(prev => [...prev, tag]);
+      setFormData(prev => ({ ...prev, faculty: [...facultyTags, tag].join(", ") }));
+    }
+    setFacultyInput('');
+    setShowFacultyOptions(false);
+  };
+
+  const removeUniversityTag = (tagToRemove: string) => {
+    setUniversityTags(prev => {
+      const newTags = prev.filter(tag => tag !== tagToRemove);
+      setFormData(prev => ({ ...prev, university: newTags.join(", ") }));
+      return newTags;
+    });
+  };
+
+  const removeFacultyTag = (tagToRemove: string) => {
+    setFacultyTags(prev => {
+      const newTags = prev.filter(tag => tag !== tagToRemove);
+      setFormData(prev => ({ ...prev, faculty: newTags.join(", ") }));
+      return newTags;
+    });
+  };
 
   const validateStep1 = () => {
-    if (formData.username.length < 6 || formData.username.length > 20) {
-      setError("ชื่อผู้ใช้ต้องมีความยาว 6-20 ตัวอักษร")
-      return false
-    }
-
-    if (!/^[a-zA-Z0-9]+$/.test(formData.username)) {
-      setError("ชื่อผู้ใช้ต้องประกอบด้วยตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น")
+    if (!formData.username) {
+      setError("กรุณากรอกชื่อผู้ใช้")
       return false
     }
 
@@ -282,7 +352,7 @@ export default function Signup() {
                           name="study_program"
                           value="science"
                           checked={formData.study_program === "science"}
-                          onChange={handleRadioChange}
+                          onChange={handleChange}
                           className="mr-2"
                           required
                           disabled={isLoading}
@@ -295,7 +365,7 @@ export default function Signup() {
                           name="study_program"
                           value="arts-math"
                           checked={formData.study_program === "arts-math"}
-                          onChange={handleRadioChange}
+                          onChange={handleChange}
                           className="mr-2"
                           disabled={isLoading}
                         />
@@ -307,7 +377,7 @@ export default function Signup() {
                           name="study_program"
                           value="arts-lang"
                           checked={formData.study_program === "arts-lang"}
-                          onChange={handleRadioChange}
+                          onChange={handleChange}
                           className="mr-2"
                           disabled={isLoading}
                         />
@@ -346,36 +416,114 @@ export default function Signup() {
                   transition={{ duration: 0.3 }}
                   className="space-y-4"
                 >
-                  <div className="space-y-2">
-                    <label htmlFor="university" className="block text-sm font-medium">
-                      มหาวิทยาลัยที่สนใจ
-                    </label>
-                    <input
-                      id="university"
-                      name="university"
-                      type="text"
-                      value={formData.university}
-                      onChange={handleChange}
-                      placeholder="ระบุมหาวิทยาลัยที่สนใจ"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                      disabled={isLoading}
-                    />
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">มหาวิทยาลัยที่สนใจ</label>
+                    <div className="border border-gray-300 rounded-lg p-3">
+                      <div className="flex flex-wrap gap-2 mb-3 min-h-[28px]">
+                        {universityTags.map((tag, index) => (
+                          <div
+                            key={index}
+                            className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center text-sm"
+                          >
+                            <span>{tag}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeUniversityTag(tag)}
+                              className="ml-2 text-blue-500 hover:text-blue-700"
+                              disabled={isLoading}
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="relative" ref={universityInputRef}>
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <School size={16} className="text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={universityInput}
+                          onChange={handleUniversityInputChange}
+                          placeholder="พิมพ์ชื่อมหาวิทยาลัย"
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                          disabled={isLoading}
+                        />
+                        {showUniversityOptions && universityOptions.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                            {universityOptions.map((option) => (
+                              <button
+                                key={option.id}
+                                onClick={() => handleSelectUniversity(option)}
+                                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex flex-col"
+                              >
+                                <span className="font-medium">{option.name_th}</span>
+                                <span className="text-sm text-gray-500">{option.campus_th}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label htmlFor="faculty" className="block text-sm font-medium">
-                      คณะและสาขาที่สนใจ
-                    </label>
-                    <input
-                      id="faculty"
-                      name="faculty"
-                      type="text"
-                      value={formData.faculty}
-                      onChange={handleChange}
-                      placeholder="ระบุคณะหรือสาขาที่สนใจ"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                      disabled={isLoading}
-                    />
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">คณะที่สนใจ</label>
+                    <div className="border border-gray-300 rounded-lg p-3">
+                      <div className="flex flex-wrap gap-2 mb-3 min-h-[28px]">
+                        {facultyTags.map((tag, index) => (
+                          <div
+                            key={index}
+                            className="bg-green-100 text-green-800 px-3 py-1 rounded-full flex items-center text-sm"
+                          >
+                            <span>{tag}</span>
+                            <button
+                              type="button"
+                              onClick={() => removeFacultyTag(tag)}
+                              className="ml-2 text-green-500 hover:text-green-700"
+                              disabled={isLoading}
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="relative" ref={facultyInputRef}>
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M12 14l9-5-9-5-9 5 9 5z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                          </svg>
+                        </div>
+                        <input
+                          type="text"
+                          value={facultyInput}
+                          onChange={handleFacultyInputChange}
+                          placeholder="พิมพ์ชื่อคณะ"
+                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                          disabled={isLoading || universityTags.length === 0}
+                        />
+                        {showFacultyOptions && facultyOptions.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                            {facultyOptions
+                              .filter(option => 
+                                option.name_th.toLowerCase().includes(facultyInput.toLowerCase()) ||
+                                option.name_en.toLowerCase().includes(facultyInput.toLowerCase())
+                              )
+                              .map((option) => (
+                                <button
+                                  key={option.id}
+                                  onClick={() => handleSelectFaculty(option)}
+                                  className="w-full px-4 py-2 text-left hover:bg-gray-100 flex flex-col"
+                                >
+                                  <span className="font-medium">{option.name_th}</span>
+                                  <span className="text-sm text-gray-500">{option.name_en}</span>
+                                </button>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
