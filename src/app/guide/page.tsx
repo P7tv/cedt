@@ -1,33 +1,22 @@
 "use client"
 
 import { Navigation } from "@/components/navigation"
-import { motion } from "framer-motion"
-import {
-  BookOpen,
-  Calculator,
-  GraduationCap
-} from "lucide-react"
+import { BookOpen, Calculator, GraduationCap } from "lucide-react"
+import Link from "next/link"
 
 export default function Guide() {
-
   return (
     <main className="min-h-screen flex flex-col bg-gray-50">
       <Navigation />
-      
-      <div className="bg-primary/10 py-4 text-center font-medium">
-        คู่มือการสอบ
-      </div>
-      
+
+      <div className="bg-primary/10 py-4 text-center font-medium">คู่มือการสอบ</div>
+
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-lg shadow-md overflow-hidden"
-          >
-            <div className="h-16 bg-blue-500 flex items-center justify-center">
-              <BookOpen className="text-white h-8 w-8" />
+          {/* TGAT Card */}
+          <div className="rounded-lg shadow-md overflow-hidden bg-white">
+            <div className="h-32 bg-blue-500 flex items-center justify-center">
+              <BookOpen className="text-white h-12 w-12" />
             </div>
             <div className="p-6">
               <h2 className="text-xl font-bold mb-3">TGAT</h2>
@@ -41,16 +30,12 @@ export default function Guide() {
                 ดูรายละเอียด
               </button>
             </div>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-lg shadow-md overflow-hidden"
-          >
-            <div className="h-16 bg-purple-500 flex items-center justify-center">
-              <Calculator className="text-white h-8 w-8" />
+          </div>
+
+          {/* TPAT Card */}
+          <div className="rounded-lg shadow-md overflow-hidden bg-white">
+            <div className="h-32 bg-purple-500 flex items-center justify-center">
+              <Calculator className="text-white h-12 w-12" />
             </div>
             <div className="p-6">
               <h2 className="text-xl font-bold mb-3">TPAT</h2>
@@ -64,16 +49,12 @@ export default function Guide() {
                 ดูรายละเอียด
               </button>
             </div>
-          </motion.div>
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-lg shadow-md overflow-hidden"
-          >
-            <div className="h-16 bg-green-500 flex items-center justify-center">
-              <GraduationCap className="text-white h-8 w-8" />
+          </div>
+
+          {/* A-LEVEL Card */}
+          <div className="rounded-lg shadow-md overflow-hidden bg-white">
+            <div className="h-32 bg-green-500 flex items-center justify-center">
+              <GraduationCap className="text-white h-12 w-12" />
             </div>
             <div className="p-6">
               <h2 className="text-xl font-bold mb-3">A-LEVEL</h2>
@@ -88,30 +69,61 @@ export default function Guide() {
                 ดูรายละเอียด
               </button>
             </div>
-          </motion.div>
+          </div>
+
+          {/* A-LEVEL Calculator Card */}
+          <div className="rounded-lg shadow-md overflow-hidden bg-white">
+            <div className="h-32 bg-orange-500 flex items-center justify-center">
+              <Calculator className="text-white h-12 w-12" />
+            </div>
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-3">โปรแกรมคำนวน A-LEVEL</h2>
+              <p className="text-gray-600 mb-4">เครื่องมือช่วยคำนวณคะแนนและประเมินโอกาสในการสอบ A-Level</p>
+              <ul className="list-disc list-inside text-gray-700 space-y-1 mb-4">
+                <li>คำนวณคะแนนรวม</li>
+                <li>ประเมินโอกาสติดคณะที่ต้องการ</li>
+                <li>เปรียบเทียบกับคะแนนปีที่ผ่านมา</li>
+                <li>แนะนำการเตรียมตัวตามคะแนน</li>
+              </ul>
+                <Link 
+                href="/guide/calculator" 
+                className="w-full py-2 mt-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors inline-block text-center"
+                >
+                ใช้งานโปรแกรม
+                </Link>
+            </div>
+          </div>
         </div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8 bg-white rounded-lg shadow-md p-6"
-        >
+
+        {/* Exam Schedule */}
+        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold mb-4">ตารางสอบ</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
                     การสอบ
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
                     วันที่
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
                     เวลา
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
                     ลงทะเบียน
                   </th>
                 </tr>
@@ -168,20 +180,17 @@ export default function Guide() {
               </tbody>
             </table>
           </div>
-          
+
           <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-md">
             <p className="text-sm text-blue-800">
-              <span className="font-semibold">หมายเหตุ:</span> ตารางการสอบอาจมีการเปลี่ยนแปลง โปรดติดตามประกาศอย่างเป็นทางการจาก ทปอ. และเว็บไซต์ mytcas.com
+              <span className="font-semibold">หมายเหตุ:</span> ตารางการสอบอาจมีการเปลี่ยนแปลง
+              โปรดติดตามประกาศอย่างเป็นทางการจาก ทปอ. และเว็บไซต์ mytcas.com
             </p>
           </div>
-        </motion.div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8 bg-white rounded-lg shadow-md p-6"
-        >
+        </div>
+
+        {/* Additional Resources */}
+        <div className="mt-8 bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold mb-4">แหล่งเรียนรู้เพิ่มเติม</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="border border-gray-200 rounded-md p-4 hover:bg-gray-50 transition-colors cursor-pointer">
@@ -201,8 +210,9 @@ export default function Guide() {
               <p className="text-gray-600 text-sm mt-1">เทคนิคการอ่านหนังสือและเตรียมตัวสอบ</p>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </main>
   )
 }
+

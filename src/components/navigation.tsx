@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { ProfileDropdown } from './profile-dropdown'
 import { useAuth } from '@/hooks/use-auth'
 import { Menu, X, Search } from 'lucide-react'
+import Image from 'next/image'
 
 export function Navigation() {
   const pathname = usePathname()
@@ -45,31 +46,21 @@ export function Navigation() {
           <Link href="/" className="text-2xl font-bold text-primary">
             DeK.
           </Link>
-        </div>
-        
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex space-x-1">
-          {navLinks.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`px-3 py-2 text-sm font-medium transition-colors hover:text-primary ${
-                pathname === href ? 'text-primary font-semibold' : 'text-gray-500'
-              }`}
-            >
-              {label}
-            </Link>
-          ))}
-          {user && (
-            <Link
-              href="/profile"
-              className={`px-3 py-2 text-sm font-medium transition-colors hover:text-primary ${
-                pathname === '/profile' ? 'text-primary font-semibold' : 'text-gray-500'
-              }`}
-            >
-              Profile
-            </Link>
-          )}
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex ml-10 space-x-6">
+            {navLinks.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  pathname === href ? 'text-gray-900 font-semibold' : 'text-gray-500'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
         </div>
         
         <div className="flex items-center space-x-4">
@@ -77,17 +68,24 @@ export function Navigation() {
             <input
               type="text"
               placeholder="Search..."
-              className="py-1 px-3 pr-8 rounded-full text-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+              className="bg-gray-100 rounded-full py-1 px-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
-            <button className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400">
-              <Search size={16} />
-            </button>
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           </div>
-          
+
           {!loading && (
             user ? (
-              // We don't need to pass the icon anymore, it will be handled inside the component
-              <ProfileDropdown />
+              <div className="ml-4">
+                <div className="h-8 w-8 rounded-full bg-gray-800 overflow-hidden">
+                  <Image
+                    src="/placeholder.svg?height=32&width=32"
+                    alt="Profile"
+                    width={32}
+                    height={32}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              </div>
             ) : (
               <div className="hidden md:flex space-x-2">
                 <Link 
